@@ -1,0 +1,111 @@
+---
+title: "HeatMap"
+author: "Nitish Malhotra"
+date: "9 February 2018"
+output: word_document
+---
+#Load of data File 
+
+```{r}
+rm(list=ls())
+setwd('C:\\Users\\10382\\Downloads')
+df <- read.csv('data.csv',header = TRUE)
+head(df)
+```
+
+#Inspecting Data
+
+```{r}
+head(df)  #first five row of data
+dim(data) #Dimension of data
+names(df) #Column names of data
+str(df)   #Structure of data
+
+```
+
+#Plotting of missing data
+
+```{r}
+#library(VIM)
+#aggr_plot <- aggr(data, col=c('navyblue','red'), numbers=TRUE, sortVars=TRUE, labels=names(data), cex.axis=.7, gap=3, ylab=c("Histogram of missing data","Pattern"))
+```
+
+#Imputing Missing data 
+
+```{r}
+# Filled data with median 
+library(dplyr)
+ df  <- df %>%  mutate_all(~ifelse(is.na(.), median(., na.rm = TRUE), .))
+```
+
+#converting factor into numeric
+
+```{r}
+df$Dividend.type <- as.numeric(df$Dividend.type)
+```
+
+#Factor Analysis
+
+```{r}
+mydata <- df
+n.factors <- 2   
+fit <- factanal(mydata, 
+                n.factors,                # number of factors to extract
+                scores=c("regression"),
+                rotation="none")
+
+print(fit, digits=2, cutoff=.3, sort=TRUE)
+```
+
+
+```{r}
+# plot factor 1 by factor 2 
+load <- fit$loadings[,1:2] 
+plot(load,type="n") # set up plot 
+text(load,labels=names(mydata),cex=.7) # add variable names
+```
+
+#Factor Analysis using Varimax
+
+```{r}
+fit <- factanal(mydata, 
+                n.factors,              # number of factors to extract
+                rotation="varimax")     # 'varimax' is an ortho rotation
+
+load <- fit$loadings[,1:2] 
+load
+```
+
+#Plot of varimax 
+
+```{r}
+plot(load,type="n") # set up plot 
+text(load,labels=names(mydata),cex=.7) # add variable names
+```
+
+
+```{r}
+library(psych)
+solution <- fa(r = cor(mydata), nfactors = 2, rotate = "oblimin", fm = "pa")
+plot(solution,labels=names(mydata),cex=.7, ylim=c(-.1,1)) 
+solution
+```
+
+
+```{r}
+
+#Determining the Number of Factors to Extract
+
+# install.packages("psy")
+library(psy)
+scree.plot(fit$correlation)
+# Determine Number of Factors to Extract
+# install.packages("nFactors")
+library(nFactors)
+
+ev <- eigen(cor(mydata)) # get eigenvalues
+ap <- parallel(subject=nrow(mydata),var=ncol(mydata), rep=100, cent=.05)
+nS <- nScree(x=ev$values, aparallel=ap$eigen$qevpea)
+plotnScree(nS)
+```
+
